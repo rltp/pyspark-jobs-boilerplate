@@ -3,19 +3,22 @@ import time
 import importlib
 import threading
 
-from pipeline.utils import filepath, listdir
+from pipeline.utils import subpackages
 from pipeline.shared.context import logger
 from pyspark import SparkContext, SparkConf
+from pyspark.sql import SparkSession
 
 threads = []
 
 def createJobsThread(sc, environment):
     global threads
 
-    for job_name in listdir('jobs'):
+    packages = subpackages('pipeline.jobs')
+
+    for job_name in packages.keys() :
         try:
-            logger.info("Job '%s' preparation" % job_name)
-            job_module = importlib.import_module('pipeline.jobs.%s' % job_name)
+            logger.info("[%s] Job preparation" % job_name)
+            job_module = importlib.import_module(packages[job_name])
             
             thread = threading.Thread(
                 target=job_module.run,
@@ -38,7 +41,7 @@ def startJobsThread():
             job.start()
             job.join()
             end = time.time()
-            logger.info("Execution of '%s' job took %s seconds" %
+            logger.info("[%s] Execution job took %s seconds" %
                         (job.name, end - start))
         except Exception as e:
             logger.error(e)

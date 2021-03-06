@@ -1,0 +1,652 @@
+[33mcommit 5561251cc15dafad06928853190e872eb7da32f2[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: rltp <43882811+rltp@users.noreply.github.com>
+Date:   Fri Mar 5 16:48:51 2021 +0100
+
+    first commit
+
+[1mdiff --git a/.coveragerc b/.coveragerc[m
+[1mnew file mode 100644[m
+[1mindex 0000000..ca39ae3[m
+[1m--- /dev/null[m
+[1m+++ b/.coveragerc[m
+[36m@@ -0,0 +1,5 @@[m
+[32m+[m[32m[report][m
+[32m+[m[32mshow_missing = True[m
+[32m+[m[32momit =[m
+[32m+[m[32m    mycommand_tests/*[m
+[32m+[m[32m    venv/*[m
+\ No newline at end of file[m
+[1mdiff --git a/.editorconfig b/.editorconfig[m
+[1mnew file mode 100644[m
+[1mindex 0000000..ee1f5c3[m
+[1m--- /dev/null[m
+[1m+++ b/.editorconfig[m
+[36m@@ -0,0 +1,12 @@[m
+[32m+[m[32mroot = true[m
+[32m+[m
+[32m+[m[32m[*][m
+[32m+[m[32mend_of_line = lf[m
+[32m+[m[32minsert_final_newline = true[m
+[32m+[m[32mtrim_trailing_whitespace = true[m
+[32m+[m[32mcharset = utf-8[m
+[32m+[m[32mindent_style = space[m
+[32m+[m[32mindent_size = 4[m
+[32m+[m
+[32m+[m[32m[Makefile][m
+[32m+[m[32mindent_style = tab[m
+[1mdiff --git a/.github/workflows/main.yml b/.github/workflows/main.yml[m
+[1mnew file mode 100644[m
+[1mindex 0000000..0b84677[m
+[1m--- /dev/null[m
+[1m+++ b/.github/workflows/main.yml[m
+[36m@@ -0,0 +1,38 @@[m
+[32m+[m[32mname: continuous_integration_delivery[m
+[32m+[m
+[32m+[m[32mon: [push, pull_request][m
+[32m+[m
+[32m+[m[32mjobs:[m
+[32m+[m[32m  build:[m
+[32m+[m[32m    runs-on: ubuntu-latest[m
+[32m+[m
+[32m+[m[32m    steps:[m
+[32m+[m[32m    - uses: actions/checkout@v2[m
+[32m+[m
+[32m+[m[32m    - name: update package manager & install make python3 pip pipenv[m
+[32m+[m[32m      run: |[m
+[32m+[m[32m        sudo apt update -y[m
+[32m+[m[32m        sudo apt install -y make python3 python3-setuptools python3-pip[m
+[32m+[m[32m        sudo pip3 install pipenv[m
+[32m+[m[32m        sudo pip3 install wheel[m
+[32m+[m[32m        make install_requirements_dev[m
+[32m+[m[41m    [m
+[32m+[m[32m    - name: tests[m
+[32m+[m[32m      run:[m
+[32m+[m[32m        make tests[m
+[32m+[m[41m      [m
+[32m+[m[32m    - name: build[m
+[32m+[m[32m      run: |[m
+[32m+[m[32m        make clean[m
+[32m+[m[32m        make install_requirements[m
+[32m+[m[32m        make dist[m
+[32m+[m[41m      [m
+[32m+[m[32m    - name: configure AWS credentials[m
+[32m+[m[32m      uses: aws-actions/configure-aws-credentials@v1[m
+[32m+[m[32m      with:[m
+[32m+[m[32m        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}[m
+[32m+[m[32m        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_SECRET }}[m
+[32m+[m[32m        aws-region: ${{ secrets.AWS_REGION }}[m
+[32m+[m
+[32m+[m[32m    - name: deploy[m
+[32m+[m[32m      run: aws s3 sync dist/ s3://${{ secrets.AWS_BUCKET_NAME }}/bundle/ --delete[m
+\ No newline at end of file[m
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mnew file mode 100644[m
+[1mindex 0000000..05d91b3[m
+[1m--- /dev/null[m
+[1m+++ b/.gitignore[m
+[36m@@ -0,0 +1,13 @@[m
+[32m+[m[32m/venv[m
+[32m+[m[32m__pycache__[m
+[32m+[m[32m**/*.pyc[m
+[32m+[m[32m/.coverage[m
+[32m+[m[32m/.idea[m
+[32m+[m[32m/dist[m
+[32m+[m[32m/build[m
+[32m+[m[32m/htmlcov[m
+[32m+[m[32mvenv[m
+[32m+[m[32m*.egg-info[m
+[32m+[m[32m.tox[m
+[32m+[m[32m*.env[m
+[32m+[m[32m/reqlib-metadata[m
+\ No newline at end of file[m
+[1mdiff --git a/.pylintrc b/.pylintrc[m
+[1mnew file mode 100644[m
+[1mindex 0000000..2227188[m
+[1m--- /dev/null[m
+[1m+++ b/.pylintrc[m
+[36m@@ -0,0 +1,579 @@[m
+[32m+[m[32m[MASTER][m
+[32m+[m
+[32m+[m[32m# A comma-separated list of package or module names from where C extensions may[m
+[32m+[m[32m# be loaded. Extensions are loading into the active Python interpreter and may[m
+[32m+[m[32m# run arbitrary code.[m
+[32m+[m[32mextension-pkg-whitelist=[m
+[32m+[m
+[32m+[m[32m# Add files or directories to the blacklist. They should be base names, not[m
+[32m+[m[32m# paths.[m
+[32m+[m[32mignore=CVS[m
+[32m+[m
+[32m+[m[32m# Add files or directories matching the regex patterns to the blacklist. The[m
+[32m+[m[32m# regex matches against base names, not paths.[m
+[32m+[m[32mignore-patterns=[m
+[32m+[m
+[32m+[m[32m# Python code to execute, usually for sys.path manipulation such as[m
+[32m+[m[32m# pygtk.require().[m
+[32m+[m[32m#init-hook=[m
+[32m+[m
+[32m+[m[32m# Use multiple processes to speed up Pylint. Specifying 0 will auto-detect the[m
+[32m+[m[32m# number of processors available to use.[m
+[32m+[m[32mjobs=1[m
+[32m+[m
+[32m+[m[32m# Control the amount of potential inferred values when inferring a single[m
+[32m+[m[32m# object. This can help the performance when dealing with large functions or[m
+[32m+[m[32m# complex, nested conditions.[m
+[32m+[m[32mlimit-inference-results=100[m
+[32m+[m
+[32m+[m[32m# List of plugins (as comma separated values of python modules names) to load,[m
+[32m+[m[32m# usually to register additional checkers.[m
+[32m+[m[32mload-plugins=[m
+[32m+[m
+[32m+[m[32m# Pickle collected data for later comparisons.[m
+[32m+[m[32mpersistent=yes[m
+[32m+[m
+[32m+[m[32m# Specify a configuration file.[m
+[32m+[m[32m#rcfile=[m
+[32m+[m
+[32m+[m[32m# When enabled, pylint would attempt to guess common misconfiguration and emit[m
+[32m+[m[32m# user-friendly hints instead of false-positive error messages.[m
+[32m+[m[32msuggestion-mode=yes[m
+[32m+[m
+[32m+[m[32m# Allow loading of arbitrary C extensions. Extensions are imported into the[m
+[32m+[m[32m# active Python interpreter and may run arbitrary code.[m
+[32m+[m[32munsafe-load-any-extension=no[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[MESSAGES CONTROL][m
+[32m+[m
+[32m+[m[32m# Only show warnings with the listed confidence levels. Leave empty to show[m
+[32m+[m[32m# all. Valid levels: HIGH, INFERENCE, INFERENCE_FAILURE, UNDEFINED.[m
+[32m+[m[32mconfidence=[m
+[32m+[m
+[32m+[m[32m# Disable the message, report, category or checker with the given id(s). You[m
+[32m+[m[32m# can either give multiple identifiers separated by comma (,) or put this[m
+[32m+[m[32m# option multiple times (only on the command line, not in the configuration[m
+[32m+[m[32m# file where it should appear only once). You can also use "--disable=all" to[m
+[32m+[m[32m# disable everything first and then reenable specific checks. For example, if[m
+[32m+[m[32m# you want to run only the similarities checker, you can use "--disable=all[m
+[32m+[m[32m# --enable=similarities". If you want to run only the classes checker, but have[m
+[32m+[m[32m# no Warning level messages displayed, use "--disable=all --enable=classes[m
+[32m+[m[32m# --disable=W".[m
+[32m+[m[32mdisable=missing-docstring,[m
+[32m+[m[32m        print-statement,[m
+[32m+[m[32m        parameter-unpacking,[m
+[32m+[m[32m        unpacking-in-except,[m
+[32m+[m[32m        old-raise-syntax,[m
+[32m+[m[32m        backtick,[m
+[32m+[m[32m        long-suffix,[m
+[32m+[m[32m        old-ne-operator,[m
+[32m+[m[32m        old-octal-literal,[m
+[32m+[m[32m        import-star-module-level,[m
+[32m+[m[32m        non-ascii-bytes-literal,[m
+[32m+[m[32m        raw-checker-failed,[m
+[32m+[m[32m        bad-inline-option,[m
+[32m+[m[32m        locally-disabled,[m
+[32m+[m[32m        file-ignored,[m
+[32m+[m[32m        suppressed-message,[m
+[32m+[m[32m        useless-suppression,[m
+[32m+[m[32m        deprecated-pragma,[m
+[32m+[m[32m        use-symbolic-message-instead,[m
+[32m+[m[32m        no-self-use,[m
+[32m+[m[32m        too-few-public-methods,[m
+[32m+[m[32m        pointless-string-statement,[m
+[32m+[m[32m        unnecessary-lambda,[m
+[32m+[m[32m        unused-import,[m
+[32m+[m[32m        logging-format-interpolation,[m
+[32m+[m[32m        apply-builtin,[m
+[32m+[m[32m        basestring-builtin,[m
+[32m+[m[32m        buffer-builtin,[m
+[32m+[m[32m        cmp-builtin,[m
+[32m+[m[32m        coerce-builtin,[m
+[32m+[m[32m        execfile-builtin,[m
+[32m+[m[32m        file-builtin,[m
+[32m+[m[32m        long-builtin,[m
+[32m+[m[32m        raw_input-builtin,[m
+[32m+[m[32m        reduce-builtin,[m
+[32m+[m[32m        standarderror-builtin,[m
+[32m+[m[32m        unicode-builtin,[m
+[32m+[m[32m        xrange-builtin,[m
+[32m+[m[32m        coerce-method,[m
+[32m+[m[32m        delslice-method,[m
+[32m+[m[32m        getslice-method,[m
+[32m+[m[32m        setslice-method,[m
+[32m+[m[32m        no-absolute-import,[m
+[32m+[m[32m        old-division,[m
+[32m+[m[32m        dict-iter-method,[m
+[32m+[m[32m        dict-view-method,[m
+[32m+[m[32m        next-method-called,[m
+[32m+[m[32m        metaclass-assignment,[m
+[32m+[m[32m        indexing-exception,[m
+[32m+[m[32m        raising-string,[m
+[32m+[m[32m        reload-builtin,[m
+[32m+[m[32m        oct-method,[m
+[32m+[m[32m        hex-method,[m
+[32m+[m[32m        nonzero-method,[m
+[32m+[m[32m        cmp-method,[m
+[32m+[m[32m        input-builtin,[m
+[32m+[m[32m        round-builtin,[m
+[32m+[m[32m        intern-builtin,[m
+[32m+[m[32m        unichr-builtin,[m
+[32m+[m[32m        map-builtin-not-iterating,[m
+[32m+[m[32m        zip-builtin-not-iterating,[m
+[32m+[m[32m        range-builtin-not-iterating,[m
+[32m+[m[32m        filter-builtin-not-iterating,[m
+[32m+[m[32m        using-cmp-argument,[m
+[32m+[m[32m        eq-without-hash,[m
+[32m+[m[32m        div-method,[m
+[32m+[m[32m        idiv-method,[m
+[32m+[m[32m        rdiv-method,[m
+[32m+[m[32m        exception-message-attribute,[m
+[32m+[m[32m        invalid-str-codec,[m
+[32m+[m[32m        sys-max-int,[m
+[32m+[m[32m        bad-python3-import,[m
+[32m+[m[32m        deprecated-string-function,[m
+[32m+[m[32m        deprecated-str-translate-call,[m
+[32m+[m[32m        deprecated-itertools-function,[m
+[32m+[m[32m        deprecated-types-field,[m
+[32m+[m[32m        next-method-defined,[m
+[32m+[m[32m        dict-items-not-iterating,[m
+[32m+[m[32m        dict-keys-not-iterating,[m
+[32m+[m[32m        dict-values-not-iterating,[m
+[32m+[m[32m        deprecated-operator-function,[m
+[32m+[m[32m        deprecated-urllib-function,[m
+[32m+[m[32m        xreadlines-attribute,[m
+[32m+[m[32m        deprecated-sys-function,[m
+[32m+[m[32m        exception-escape,[m
+[32m+[m[32m        comprehension-escape[m
+[32m+[m
+[32m+[m[32m# Enable the message, report, category or checker with the given id(s). You can[m
+[32m+[m[32m# either give multiple identifier separated by comma (,) or put this option[m
+[32m+[m[32m# multiple time (only on the command line, not in the configuration file where[m
+[32m+[m[32m# it should appear only once). See also the "--disable" option for examples.[m
+[32m+[m[32menable=c-extension-no-member[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[REPORTS][m
+[32m+[m
+[32m+[m[32m# Python expression which should return a note less than 10 (10 is the highest[m
+[32m+[m[32m# note). You have access to the variables errors warning, statement which[m
+[32m+[m[32m# respectively contain the number of errors / warnings messages and the total[m
+[32m+[m[32m# number of statements analyzed. This is used by the global evaluation report[m
+[32m+[m[32m# (RP0004).[m
+[32m+[m[32mevaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)[m
+[32m+[m
+[32m+[m[32m# Template used to display messages. This is a python new-style format string[m
+[32m+[m[32m# used to format the message information. See doc for all details.[m
+[32m+[m[32m#msg-template=[m
+[32m+[m
+[32m+[m[32m# Set the output format. Available formats are text, parseable, colorized, json[m
+[32m+[m[32m# and msvs (visual studio). You can also give a reporter class, e.g.[m
+[32m+[m[32m# mypackage.mymodule.MyReporterClass.[m
+[32m+[m[32moutput-format=text[m
+[32m+[m
+[32m+[m[32m# Tells whether to display a full report or only the messages.[m
+[32m+[m[32mreports=yes[m
+[32m+[m
+[32m+[m[32m# Activate the evaluation score.[m
+[32m+[m[32mscore=yes[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[REFACTORING][m
+[32m+[m
+[32m+[m[32m# Maximum number of nested blocks for function / method body[m
+[32m+[m[32mmax-nested-blocks=5[m
+[32m+[m
+[32m+[m[32m# Complete name of functions that never returns. When checking for[m
+[32m+[m[32m# inconsistent-return-statements if a never returning function is called then[m
+[32m+[m[32m# it will be considered as an explicit return statement and no message will be[m
+[32m+[m[32m# printed.[m
+[32m+[m[32mnever-returning-functions=sys.exit[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[VARIABLES][m
+[32m+[m
+[32m+[m[32m# List of additional names supposed to be defined in builtins. Remember that[m
+[32m+[m[32m# you should avoid defining new builtins when possible.[m
+[32m+[m[32madditional-builtins=[m
+[32m+[m
+[32m+[m[32m# Tells whether unused global variables should be treated as a violation.[m
+[32m+[m[32mallow-global-unused-variables=yes[m
+[32m+[m
+[32m+[m[32m# List of strings which can identify a callback function by name. A callback[m
+[32m+[m[32m# name must start or end with one of those strings.[m
+[32m+[m[32mcallbacks=cb_,[m
+[32m+[m[32m          _cb[m
+[32m+[m
+[32m+[m[32m# A regular expression matching the name of dummy variables (i.e. expected to[m
+[32m+[m[32m# not be used).[m
+[32m+[m[32mdummy-variables-rgx=_$|dummy[m
+[32m+[m
+[32m+[m[32m# Argument names that match this expression will be ignored. Default to name[m
+[32m+[m[32m# with leading underscore.[m
+[32m+[m[32mignored-argument-names=(_|conf_).*[m
+[32m+[m
+[32m+[m[32m# Tells whether we should check for unused import in __init__ files.[m
+[32m+[m[32minit-import=no[m
+[32m+[m
+[32m+[m[32m# List of qualified module names which can have objects that can redefine[m
+[32m+[m[32m# builtins.[m
+[32m+[m[32mredefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[TYPECHECK][m
+[32m+[m
+[32m+[m[32m# List of decorators that produce context managers, such as[m
+[32m+[m[32m# contextlib.contextmanager. Add to this list to register other decorators that[m
+[32m+[m[32m# produce valid context managers.[m
+[32m+[m[32mcontextmanager-decorators=contextlib.contextmanager[m
+[32m+[m
+[32m+[m[32m# List of members which are set dynamically and missed by pylint inference[m
+[32m+[m[32m# system, and so shouldn't trigger E1101 when accessed. Python regular[m
+[32m+[m[32m# expressions are accepted.[m
+[32m+[m[32mgenerated-members=[m
+[32m+[m
+[32m+[m[32m# Tells whether missing members accessed in mixin class should be ignored. A[m
+[32m+[m[32m# mixin class is detected if its name ends with "mixin" (case insensitive).[m
+[32m+[m[32mignore-mixin-members=yes[m
+[32m+[m
+[32m+[m[32m# Tells whether to warn about missing members when the owner of the attribute[m
+[32m+[m[32m# is inferred to be None.[m
+[32m+[m[32mignore-none=yes[m
+[32m+[m
+[32m+[m[32m# This flag controls whether pylint should warn about no-member and similar[m
+[32m+[m[32m# checks whenever an opaque object is returned when inferring. The inference[m
+[32m+[m[32m# can return multiple potential results while evaluating a Python object, but[m
+[32m+[m[32m# some branches might not be evaluated, which results in partial inference. In[m
+[32m+[m[32m# that case, it might be useful to still emit no-member and other checks for[m
+[32m+[m[32m# the rest of the inferred objects.[m
+[32m+[m[32mignore-on-opaque-inference=yes[m
+[32m+[m
+[32m+[m[32m# List of class names for which member attributes should not be checked (useful[m
+[32m+[m[32m# for classes with dynamically set attributes). This supports the use of[m
+[32m+[m[32m# qualified names.[m
+[32m+[m[32mignored-classes=[m
+[32m+[m
+[32m+[m[32m# List of module names for which member attributes should not be checked[m
+[32m+[m[32m# (useful for modules/projects where namespaces are manipulated during runtime[m
+[32m+[m[32m# and thus existing member attributes cannot be deduced by static analysis. It[m
+[32m+[m[32m# supports qualified module names, as well as Unix pattern matching.[m
+[32m+[m[32mignored-modules=slidesearch.common[m
+[32m+[m
+[32m+[m[32m# Show a hint with possible names when a member name was not found. The aspect[m
+[32m+[m[32m# of finding the hint is based on edit distance.[m
+[32m+[m[32mmissing-member-hint=yes[m
+[32m+[m
+[32m+[m[32m# The minimum edit distance a name should have in order to be considered a[m
+[32m+[m[32m# similar match for a missing member name.[m
+[32m+[m[32mmissing-member-hint-distance=1[m
+[32m+[m
+[32m+[m[32m# The total number of similar names that should be taken in consideration when[m
+[32m+[m[32m# showing a hint for a missing member.[m
+[32m+[m[32mmissing-member-max-choices=1[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[LOGGING][m
+[32m+[m
+[32m+[m[32m# Format style used to check logging format string. `old` means using %[m
+[32m+[m[32m# formatting, while `new` is for `{}` formatting.[m
+[32m+[m[32mlogging-format-style=old[m
+[32m+[m
+[32m+[m[32m# Logging modules to check that the string format arguments are in logging[m
+[32m+[m[32m# function parameter format.[m
+[32m+[m[32mlogging-modules=logging[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[STRING][m
+[32m+[m
+[32m+[m[32m# This flag controls whether the implicit-str-concat-in-sequence should[m
+[32m+[m[32m# generate a warning on implicit string concatenation in sequences defined over[m
+[32m+[m[32m# several lines.[m
+[32m+[m[32mcheck-str-concat-over-line-jumps=no[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[SIMILARITIES][m
+[32m+[m
+[32m+[m[32m# Ignore comments when computing similarities.[m
+[32m+[m[32mignore-comments=yes[m
+[32m+[m
+[32m+[m[32m# Ignore docstrings when computing similarities.[m
+[32m+[m[32mignore-docstrings=yes[m
+[32m+[m
+[32m+[m[32m# Ignore imports when computing similarities.[m
+[32m+[m[32mignore-imports=no[m
+[32m+[m
+[32m+[m[32m# Minimum lines number of a similarity.[m
+[32m+[m[32mmin-similarity-lines=50[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[SPELLING][m
+[32m+[m
+[32m+[m[32m# Limits count of emitted suggestions for spelling mistakes.[m
+[32m+[m[32mmax-spelling-suggestions=4[m
+[32m+[m
+[32m+[m[32m# Spelling dictionary name. Available dictionaries: none. To make it working[m
+[32m+[m[32m# install python-enchant package..[m
+[32m+[m[32mspelling-dict=[m
+[32m+[m
+[32m+[m[32m# List of comma separated words that should not be checked.[m
+[32m+[m[32mspelling-ignore-words=[m
+[32m+[m
+[32m+[m[32m# A path to a file that contains private dictionary; one word per line.[m
+[32m+[m[32mspelling-private-dict-file=[m
+[32m+[m
+[32m+[m[32m# Tells whether to store unknown words to indicated private dictionary in[m
+[32m+[m[32m# --spelling-private-dict-file option instead of raising a message.[m
+[32m+[m[32mspelling-store-unknown-words=no[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[MISCELLANEOUS][m
+[32m+[m
+[32m+[m[32m# List of note tags to take in consideration, separated by a comma.[m
+[32m+[m[32mnotes=FIXME,[m
+[32m+[m[32m      XXX,[m
+[32m+[m[32m      TODO[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[BASIC][m
+[32m+[m
+[32m+[m[32m# Naming style matching correct argument names.[m
+[32m+[m[32margument-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct argument names. Overrides argument-[m
+[32m+[m[32m# naming-style.[m
+[32m+[m[32margument-rgx=[a-z_][a-z0-9_]{2,30}$[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct attribute names.[m
+[32m+[m[32mattr-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct attribute names. Overrides attr-naming-[m
+[32m+[m[32m# style.[m
+[32m+[m[32mattr-rgx=[a-z_][a-z0-9_]*$[m
+[32m+[m
+[32m+[m[32m# Bad variable names which should always be refused, separated by a comma.[m
+[32m+[m[32mbad-names=foo,[m
+[32m+[m[32m          bar,[m
+[32m+[m[32m          baz,[m
+[32m+[m[32m          toto,[m
+[32m+[m[32m          tutu,[m
+[32m+[m[32m          tata[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct class attribute names.[m
+[32m+[m[32mclass-attribute-naming-style=any[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct class attribute names. Overrides class-[m
+[32m+[m[32m# attribute-naming-style.[m
+[32m+[m[32mclass-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct class names.[m
+[32m+[m[32mclass-naming-style=PascalCase[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct class names. Overrides class-naming-[m
+[32m+[m[32m# style.[m
+[32m+[m[32mclass-rgx=[A-Z_][a-zA-Z0-9]+$[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct constant names.[m
+[32m+[m[32mconst-naming-style=UPPER_CASE[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct constant names. Overrides const-naming-[m
+[32m+[m[32m# style.[m
+[32m+[m[32mconst-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$[m
+[32m+[m
+[32m+[m[32m# Minimum line length for functions/classes that require docstrings, shorter[m
+[32m+[m[32m# ones are exempt.[m
+[32m+[m[32mdocstring-min-length=-1[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct function names.[m
+[32m+[m[32mfunction-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct function names. Overrides function-[m
+[32m+[m[32m# naming-style.[m
+[32m+[m[32mfunction-rgx=[a-z_][a-z0-9_]{2,30}$[m
+[32m+[m
+[32m+[m[32m# Good variable names which should always be accepted, separated by a comma.[m
+[32m+[m[32mgood-names=i,[m
+[32m+[m[32m           j,[m
+[32m+[m[32m           k,[m
+[32m+[m[32m           ex,[m
+[32m+[m[32m           Run,[m
+[32m+[m[32m           _[m
+[32m+[m
+[32m+[m[32m# Include a hint for the correct naming format with invalid-name.[m
+[32m+[m[32minclude-naming-hint=no[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct inline iteration names.[m
+[32m+[m[32minlinevar-naming-style=any[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct inline iteration names. Overrides[m
+[32m+[m[32m# inlinevar-naming-style.[m
+[32m+[m[32minlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct method names.[m
+[32m+[m[32mmethod-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct method names. Overrides method-naming-[m
+[32m+[m[32m# style.[m
+[32m+[m[32mmethod-rgx=[a-z_][_]?[a-zA-Z0-9]*[_]{0,2}$[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct module names.[m
+[32m+[m[32mmodule-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct module names. Overrides module-naming-[m
+[32m+[m[32m# style.[m
+[32m+[m[32mmodule-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$[m
+[32m+[m
+[32m+[m[32m# Colon-delimited sets of names that determine each other's naming style when[m
+[32m+[m[32m# the name regexes allow several styles.[m
+[32m+[m[32mname-group=[m
+[32m+[m
+[32m+[m[32m# Regular expression which should only match function or class names that do[m
+[32m+[m[32m# not require a docstring.[m
+[32m+[m[32mno-docstring-rgx=^_[m
+[32m+[m
+[32m+[m[32m# List of decorators that produce properties, such as abc.abstractproperty. Add[m
+[32m+[m[32m# to this list to register other decorators that produce valid properties.[m
+[32m+[m[32m# These decorators are taken in consideration only for invalid-name.[m
+[32m+[m[32mproperty-classes=abc.abstractproperty[m
+[32m+[m
+[32m+[m[32m# Naming style matching correct variable names.[m
+[32m+[m[32mvariable-naming-style=snake_case[m
+[32m+[m
+[32m+[m[32m# Regular expression matching correct variable names. Overrides variable-[m
+[32m+[m[32m# naming-style.[m
+[32m+[m[32mvariable-rgx=[a-z_][a-z0-9_]*$[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[FORMAT][m
+[32m+[m
+[32m+[m[32m# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.[m
+[32m+[m[32mexpected-line-ending-format=[m
+[32m+[m
+[32m+[m[32m# Regexp for a line that is allowed to be longer than the limit.[m
+[32m+[m[32mignore-long-lines=^\s*(# )?<?https?://\S+>?$[m
+[32m+[m
+[32m+[m[32m# Number of spaces of indent required inside a hanging or continued line.[m
+[32m+[m[32mindent-after-paren=4[m
+[32m+[m
+[32m+[m[32m# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1[m
+[32m+[m[32m# tab).[m
+[32m+[m[32mindent-string='    '[m
+[32m+[m
+[32m+[m[32m# Maximum number of characters on a single line.[m
+[32m+[m[32mmax-line-length=120[m
+[32m+[m
+[32m+[m[32m# Maximum number of lines in a module.[m
+[32m+[m[32mmax-module-lines=1000[m
+[32m+[m
+[32m+[m[32m# List of optional constructs for which whitespace checking is disabled. `dict-[m
+[32m+[m[32m# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.[m
+[32m+[m[32m# `trailing-comma` allows a space between comma and closing bracket: (a, ).[m
+[32m+[m[32m# `empty-line` allows space-only lines.[m
+[32m+[m[32mno-space-check=trailing-comma,[m
+[32m+[m[32m               dict-separator[m
+[32m+[m
+[32m+[m[32m# Allow the body of a class to be on the same line as the declaration if body[m
+[32m+[m[32m# contains single statement.[m
+[32m+[m[32msingle-line-class-stmt=no[m
+[32m+[m
+[32m+[m[32m# Allow the body of an if to be on the same line as the test if there is no[m
+[32m+[m[32m# else.[m
+[32m+[m[32msingle-line-if-stmt=no[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[CLASSES][m
+[32m+[m
+[32m+[m[32m# List of method names used to declare (i.e. assign) instance attributes.[m
+[32m+[m[32mdefining-attr-methods=__init__,[m
+[32m+[m[32m                      __new__,[m
+[32m+[m[32m                      setUp[m
+[32m+[m
+[32m+[m[32m# List of member names, which should be excluded from the protected access[m
+[32m+[m[32m# warning.[m
+[32m+[m[32mexclude-protected=_asdict,[m
+[32m+[m[32m                  _fields,[m
+[32m+[m[32m                  _replace,[m
+[32m+[m[32m                  _source,[m
+[32m+[m[32m                  _make[m
+[32m+[m
+[32m+[m[32m# List of valid names for the first argument in a class method.[m
+[32m+[m[32mvalid-classmethod-first-arg=cls[m
+[32m+[m
+[32m+[m[32m# List of valid names for the first argument in a metaclass class method.[m
+[32m+[m[32mvalid-metaclass-classmethod-first-arg=mcs[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[DESIGN][m
+[32m+[m
+[32m+[m[32m# Maximum number of arguments for function / method.[m
+[32m+[m[32mmax-args=5[m
+[32m+[m
+[32m+[m[32m# Maximum number of attributes for a class (see R0902).[m
+[32m+[m[32mmax-attributes=7[m
+[32m+[m
+[32m+[m[32m# Maximum number of boolean expressions in an if statement.[m
+[32m+[m[32mmax-bool-expr=5[m
+[32m+[m
+[32m+[m[32m# Maximum number of branch for function / method body.[m
+[32m+[m[32mmax-branches=12[m
+[32m+[m
+[32m+[m[32m# Maximum number of locals for function / method body.[m
+[32m+[m[32mmax-locals=15[m
+[32m+[m
+[32m+[m[32m# Maximum number of parents for a class (see R0901).[m
+[32m+[m[32mmax-parents=7[m
+[32m+[m
+[32m+[m[32m# Maximum number of public methods for a class (see R0904).[m
+[32m+[m[32mmax-public-methods=20[m
+[32m+[m
+[32m+[m[32m# Maximum number of return / yield for function / method body.[m
+[32m+[m[32mmax-returns=6[m
+[32m+[m
+[32m+[m[32m# Maximum number of statements in function / method body.[m
+[32m+[m[32mmax-statements=50[m
+[32m+[m
+[32m+[m[32m# Minimum number of public methods for a class (see R0903).[m
+[32m+[m[32mmin-public-methods=2[m
+[32m+[m
+[32m+[m
+[32m+[m[32m[IMPORTS][m
+[32m+[m
+[32m+[m[32m# Allow wildcard imports from modules that define __all__.[m
+[32m+[m[32mallow-wildcard-with-all=no[m
+[32m+[m
+[32m+[m[32m# Analyse import fallback blocks. This can be used to support both Python 2 and[m
+[32m+[m[32
