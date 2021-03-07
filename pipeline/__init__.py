@@ -13,23 +13,24 @@ threads = []
 def createJobsThread(sc, environment):
     global threads
 
-    packages = subpackages('pipeline.jobs')
+    try:
+        packages = subpackages('pipeline.jobs')
 
-    for job_name in packages.keys() :
-        try:
-            logger.info("[%s] Job preparation" % job_name)
-            job_module = importlib.import_module(packages[job_name])
+        for job_name in packages.keys() :
             
-            thread = threading.Thread(
-                target=job_module.run,
-                name=job_name,
-                args=(sc, environment)
-            )
-            thread.daemon = True
-            threads += [thread]
+                logger.info("[%s] Job preparation" % job_name)
+                job_module = importlib.import_module(packages[job_name])
+                
+                thread = threading.Thread(
+                    target=job_module.run,
+                    name=job_name,
+                    args=(sc, environment)
+                )
+                thread.daemon = True
+                threads += [thread]
 
-        except Exception as e:
-            logger.error(e)
+    except Exception as e:
+        logger.error(e)
 
 
 def startJobsThread():
@@ -41,8 +42,7 @@ def startJobsThread():
             job.start()
             job.join()
             end = time.time()
-            logger.info("[%s] Execution job took %s seconds" %
-                        (job.name, end - start))
+            logger.info("[%s] Execution job took %s seconds" % (job.name, end - start))
         except Exception as e:
             logger.error(e)
 
