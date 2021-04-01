@@ -42,12 +42,25 @@ class JobContext(object):
             **self.environment["sqlOptions"]
         ).load()
 
-    def load_file(self, objectfile, format, schema):
-        print(filepath('shared/data/%s' % objectfile))
-        return self.session \
-            .read.format(format) \
-            .schema(schema) \
-            .option("header", "true") \
-            .option("inferschema", "false") \
+    def load_static_file(self, objectfile, format, schema):
+        self.log('INFO', (filepath('shared/data/%s' % objectfile)))
+        return (self.session
+            .read.format(format)
+            .schema(schema)
+            .option("header", "true")
+            .option("inferschema", "false")
             .load(filepath('shared/data/%s' % objectfile))
+        )
+
+    def load_file(self, filepath, format, schema):
+        return (self.session
+            .read.format(format)
+            .schema(schema)
+            .option("header", "true")
+            .option("inferschema", "false")
+            .load(filepath)
+        )
+    
+    def save_file(self, filepath, format, dataframe):
+        dataframe.write.format(format).save(filepath)
 
